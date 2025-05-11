@@ -30,7 +30,7 @@ app.get("/", (req, res) => {
   if (req.cookies.loggedInUser) {
     return res.redirect("/dashboard");
   }
-  res.render("index"); // your login form
+  res.render("index"); 
 });
 
 app.post("/login", async (req, res) => {
@@ -72,17 +72,14 @@ app.get("/employees", async (req, res) => {
   const searchQuery = req.query.search || "";
   const searchRegex = new RegExp(searchQuery, "i");
 
-  // Pagination: Get the page number from the query (default to 1)
   const page = parseInt(req.query.page) || 1;
-  const limit = 5;  // Number of items per page
-  const skip = (page - 1) * limit;  // Number of items to skip
+  const limit = 5;  
+  const skip = (page - 1) * limit;  
 
-  // Get sort parameters from the query string
-  const sortField = req.query.sortBy || "f_Name"; // Default sort by f_Name
-  const sortOrder = req.query.sortOrder === "desc" ? -1 : 1; // Ascending (1) or Descending (-1)
+  const sortField = req.query.sortBy || "f_Name"; 
+  const sortOrder = req.query.sortOrder === "desc" ? -1 : 1; 
 
   try {
-    // Count total number of employees
     const totalEmployees = await Employee.countDocuments({
       $or: [
         { f_Name: searchRegex },
@@ -90,18 +87,17 @@ app.get("/employees", async (req, res) => {
       ]
     });
 
-    // Fetch employees with pagination and sorting
     const employees = await Employee.find({
       $or: [
         { f_Name: searchRegex },
         { f_Email: searchRegex }
       ]
     })
-      .skip(skip)    // Apply pagination (skip)
-      .limit(limit)  // Apply pagination (limit)
-      .sort({ [sortField]: sortOrder });  // Apply sorting
+      .skip(skip)    
+      .limit(limit)  
+      .sort({ [sortField]: sortOrder });  
 
-    const totalPages = Math.ceil(totalEmployees / limit); // Calculate total pages
+    const totalPages = Math.ceil(totalEmployees / limit); 
     res.render("employees", {
       employees: employees,
       search: searchQuery,
@@ -121,7 +117,6 @@ app.get("/add-test-employee", async (req, res) => {
   const courses = ["BCA", "MCA", "Java", "Python", "BSC", "Data Science"];
 
   try {
-    // Generate random values
     const randomName = names[Math.floor(Math.random() * names.length)];
     const randomCourse = courses[Math.floor(Math.random() * courses.length)];
     const randomId = Math.floor(Math.random() * 1000);
@@ -134,7 +129,7 @@ app.get("/add-test-employee", async (req, res) => {
       f_Email: `${randomName.toLowerCase()}${randomId}@example.com`,
       f_Mobile: "9999999999",
       f_Designation: "Developer",
-      f_gender: "Male", // or randomize with ["Male", "Female"]
+      f_gender: "Male", 
       f_Course: randomCourse,
       f_Createdate: currentDate,
       active: true
