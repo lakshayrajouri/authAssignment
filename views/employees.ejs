@@ -27,9 +27,18 @@
           <td><%= employee.f_Designation %></td>
           <td><%= employee.f_Course %></td>
           <td><%= employee.f_Createdate.toLocaleDateString() %></td>
+          <td><%= employee.active %>
+            <form action="/employee/<%= employee._id %>/toggle" method="POST" style="display:inline;">
+                <button type="submit">
+                    <%= employee.active ? 'Deactivate' : 'Activate' %>
+                </button>
+            </form>
+          </td>
           <td>
             <a href="/employee/edit/<%= employee._id %>">Edit</a> | 
-            <a href="/employee/delete/<%= employee._id %>">Delete</a>
+            <form action="/employee/delete/<%= employee._id %>" method="POST" style="display:inline;">
+              <button type="submit">Delete</button>
+            </form>
           </td>
         </tr>
       <% }); %>

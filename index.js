@@ -112,6 +112,56 @@ app.get("/employees", async (req, res) => {
   }
 });
 
+app.post("/employee/:id/toggle", async (req, res) => {
+  try {
+    const employee = await Employee.findById(req.params.id);
+    if (!employee) return res.status(404).send("Employee not found");
+
+    employee.active = !employee.active;
+    await employee.save();
+    res.redirect("/employees");
+  } catch (err) {
+    console.error("Error toggling active status:", err);
+    res.status(500).send("Server error");
+  }
+});
+
+app.get("/employee/edit/:id", async (req, res) => {
+  try {
+    const employee = await Employee.findById(req.params.id);
+    if (!employee) return res.status(404).send("Employee not found");
+
+    res.render("edit", { employee });
+  } catch (err) {
+    console.error("Error fetching employee:", err);
+    res.status(500).send("Server error");
+  }
+});
+
+app.post("/employee/edit/:id", async (req, res) => {
+  try {
+    await Employee.findByIdAndUpdate(req.params.id, {
+      f_Name: req.body.f_Name,
+      f_Course: req.body.f_Course,
+    });
+    res.redirect("/employees");
+  } catch (err) {
+    console.error("Error updating employee:", err);
+    res.status(500).send("Server error");
+  }
+});
+
+app.post("/employee/delete/:id", async (req, res) => {
+  try {
+    await Employee.findByIdAndDelete(req.params.id);
+    res.redirect("/employees");
+  } catch (err) {
+    console.error("Error deleting employee:", err);
+    res.status(500).send("Server error");
+  }
+});
+
+
 app.get("/add-test-employee", async (req, res) => {
   const names = ["John", "Alice", "Raj", "Priya", "Aman", "Neha"];
   const courses = ["BCA", "MCA", "Java", "Python", "BSC", "Data Science"];

@@ -1,0 +1,9 @@
+<%- include('partials/header') %>
+<h2>Edit Employee</h2>
+<form action="/employee/edit/<%= employee._id %>" method="POST">
+  Name: <input type="text" name="f_Name" value="<%= employee.f_Name %>" required><br>
+  Course: <input type="text" name="f_Course" value="<%= employee.f_Course %>" required><br>
+  <button type="submit">Save</button>
+</form>
+</body>
+</html>
