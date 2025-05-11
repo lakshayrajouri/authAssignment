@@ -2,16 +2,19 @@ import express from "express";
 import mongoose from "mongoose";
 import Login from "./models/login.js";
 import Employee from "./models/employee.js";
+import cookieParser from "cookie-parser";
+import dotenv from "dotenv";
+dotenv.config();
 
 const app = express();
 
 app.set("view engine", "ejs");
 app.set("views", "./views");
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // MongoDB connection
-const uri = "mongodb+srv://lrajouri2002:65.hemsLY3rtLDh@cluster0.bttrjvu.mongodb.net/authAdmin?retryWrites=true&w=majority";
-
+const uri = process.env.DATABASE;
 mongoose.connect(uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true
@@ -24,7 +27,10 @@ mongoose.connect(uri, {
 });
 
 app.get("/", (req, res) => {
-  res.render("index"); // Looks for views/index.ejs
+  if (req.cookies.loggedInUser) {
+    return res.redirect("/dashboard");
+  }
+  res.render("index"); // your login form
 });
 
 app.post("/login", async (req, res) => {
@@ -34,12 +40,81 @@ app.post("/login", async (req, res) => {
   if (!user || user.f_Pwd !== password) {
     return res.send("<script>alert('Invalid login details'); window.location.href = '/';</script>");
   }
-
-    // After successful login, redirect to dashboard
-    res.redirect("/dashboard");
+   res.cookie("loggedInUser", user.f_userName, { httpOnly: true });
+  res.redirect("/dashboard");
 });
 
+app.get("/dashboard", (req, res) => {
+    if (!req.cookies.loggedInUser) {
+    return res.redirect("/");
+  }
+  res.render("dashboard", {user: req.cookies.loggedInUser});
+})
 
+// app.get("/employees", async (req, res) => {
+//   if (!req.cookies.loggedInUser) {
+//     return res.redirect("/");
+//   }
+//   try {
+//     const employees = await Employee.find();
+//     console.log("Employees fetched: ", employees);  // Log the fetched data
+//     res.render("employees", { employees: employees });
+//   } catch (err) {
+//     console.error("Error fetching employees:", err);
+//     res.status(500).send("Error fetching employees");
+//   }
+// });
+app.get("/employees", async (req, res) => {
+  if (!req.cookies.loggedInUser) {
+    return res.redirect("/");
+  }
+
+  const searchQuery = req.query.search || "";
+  const searchRegex = new RegExp(searchQuery, "i");
+
+  // Pagination: Get the page number from the query (default to 1)
+  const page = parseInt(req.query.page) || 1;
+  const limit = 5;  // Number of items per page
+  const skip = (page - 1) * limit;  // Number of items to skip
+
+  // Get sort parameters from the query string
+  const sortField = req.query.sortBy || "f_Name"; // Default sort by f_Name
+  const sortOrder = req.query.sortOrder === "desc" ? -1 : 1; // Ascending (1) or Descending (-1)
+
+  try {
+    // Count total number of employees
+    const totalEmployees = await Employee.countDocuments({
+      $or: [
+        { f_Name: searchRegex },
+        { f_Email: searchRegex }
+      ]
+    });
+
+    // Fetch employees with pagination and sorting
+    const employees = await Employee.find({
+      $or: [
+        { f_Name: searchRegex },
+        { f_Email: searchRegex }
+      ]
+    })
+      .skip(skip)    // Apply pagination (skip)
+      .limit(limit)  // Apply pagination (limit)
+      .sort({ [sortField]: sortOrder });  // Apply sorting
+
+    const totalPages = Math.ceil(totalEmployees / limit); // Calculate total pages
+    res.render("employees", {
+      employees: employees,
+      search: searchQuery,
+      currentPage: page,
+      totalPages: totalPages,
+      sortBy: sortField,
+      sortOrder: sortOrder
+    });
+  } catch (err) {
+    console.error("Error fetching employees:", err);
+    res.status(500).send("Error fetching employees");
+  }
+});
 
 app.get("/add-test-employee", async (req, res) => {
   const names = ["John", "Alice", "Raj", "Priya", "Aman", "Neha"];
@@ -66,25 +141,18 @@ app.get("/add-test-employee", async (req, res) => {
     });
 
     await emp.save();
-    res.send("Random test employee added ✅");
+    res.redirect("/employees");
   } catch (err) {
     console.error(err);
     res.status(500).send("Error adding random test employee");
   }
 });
 
-app.get("/dashboard", async (req, res) => {
-  try {
-    const employees = await Employee.find();
-    console.log("Employees fetched: ", employees);  // Log the fetched data
-    res.render("dashboard", { employees: employees });
-  } catch (err) {
-    console.error("Error fetching employees:", err);
-    res.status(500).send("Error fetching employees");
-  }
+
+app.get("/logout", (req, res) => {
+  res.clearCookie("loggedInUser");
+  res.redirect("/");
 });
-
-
 
 app.listen(3000, () => {
   console.log("Server is running on port 3000");

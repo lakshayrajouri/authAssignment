@@ -1,0 +1,51 @@
+<%- include('partials/header') %>
+  <h1>Employee Dashboard</h1>
+  
+<form method="GET" action="/employees">
+  <input type="text" name="search" placeholder="Search..." value="<%= typeof search !== 'undefined' ? search : '' %>" />
+  <button type="submit">Search</button>
+</form>
+
+<table border="1">
+    <thead>
+        <tr>
+            <th><a href="/employees?search=<%= search %>&sortBy=f_Id&sortOrder=<%= sortOrder === 'asc' ? 'desc' : 'asc' %>">ID</a></th>
+            <th><a href="/employees?search=<%= search %>&sortBy=f_Name&sortOrder=<%= sortOrder === 'asc' ? 'desc' : 'asc' %>">Name</a></th>
+            <th><a href="/employees?search=<%= search %>&sortBy=f_Email&sortOrder=<%= sortOrder === 'asc' ? 'desc' : 'asc' %>">Email</a></th>
+            <th><a href="/employees?search=<%= search %>&sortBy=f_Designation&sortOrder=<%= sortOrder === 'asc' ? 'desc' : 'asc' %>">Designation</a></th>
+            <th><a href="/employees?search=<%= search %>&sortBy=f_Course&sortOrder=<%= sortOrder === 'asc' ? 'desc' : 'asc' %>">Course</a></th>
+            <th><a href="/employees?search=<%= search %>&sortBy=f_Createdate&sortOrder=<%= sortOrder === 'asc' ? 'desc' : 'asc' %>">Created Date</a></th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+      <% employees.forEach((employee) => { %>
+        <tr>
+          <td><%= employee.f_Id %></td>
+          <td><%= employee.f_Name %></td>
+          <td><%= employee.f_Email %></td>
+          <td><%= employee.f_Designation %></td>
+          <td><%= employee.f_Course %></td>
+          <td><%= employee.f_Createdate.toLocaleDateString() %></td>
+          <td>
+            <a href="/employee/edit/<%= employee._id %>">Edit</a> | 
+            <a href="/employee/delete/<%= employee._id %>">Delete</a>
+          </td>
+        </tr>
+      <% }); %>
+    </tbody>
+  </table>
+<div>
+  <% if (currentPage > 1) { %>
+    <a href="/employees?page=<%= currentPage - 1 %>&search=<%= search %>">Previous</a>
+  <% } %>
+
+  <span>Page <%= currentPage %> of <%= totalPages %></span>
+
+  <% if (currentPage < totalPages) { %>
+    <a href="/employees?page=<%= currentPage + 1 %>&search=<%= search %>">Next</a>
+  <% } %>
+</div>
+
+</body>
+</html>
